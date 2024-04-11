@@ -1,81 +1,118 @@
 # picoAM
-A simple but capable AM transmitter for the Raspbery Pi pico!
 
-### Use Arduino Mbed OS RP2040 Boards VERSION 3.x! 4.x+ is not currently compatible.
+A simple but capable AM transmitter for the Raspberry Pi pico!
 
-![Image of assembled circuit](https://media.discordapp.net/attachments/1077080199847489626/1102196399577247774/20230430_133433.jpg)
-(image deviates slightly from current version of the circuit, apologies!)
+Note: Use the https://github.com/earlephilhower/arduino-pico core and install
+the `RP2040_PWM` library in your Arduino IDE.
 
-## Disclaimer!!
+## Important Information
 
-The Pi is, to my knowledge, not able to output enough power to disrupt anything significantly as long as you're not near an airport (if you 
-are, then it ABSOLUTELY IS), but with a long enough antenna, will get you in trouble and annoy others. Please use this only for experimental 
-and educational purposes and do NOT use this in a way which might cause any disruption!
+The FCC link for unlicensed educational transmissions is here:
 
-My antenna for this is barely large enough for half of my room to have reception. Please don't go much further than that!
+https://www.fcc.gov/media/radio/low-power-radio-general-information
 
-**Also**, this project will overclock your pi. However, 200MHz is fine for 99.9% of picos and is SUPER unlikely to damage it unless you
-leave it running for a very long time (days or something in a closed environment).
+This simplest summation is:
 
-### Most important disclaimer
+1. Never interfere with anything.
 
-Legal restrictions likely aren't enough for some people to not do this. Including me actually (tho minisenders with low power like
-this are actually allowed where i live, but they have to be certified). However, there is one **EXTREMELY** importatnt thing to add:
+2. Move your frequency if you are being interfered with, DO NOT COMPLAIN.
 
-This uses square waves, so there are GOING to be harmonics. One of those is near 99.6MHz, in the FM band. You will hear the sender there 
-as well in some cases as FM receivers *can usually* receive AM, its just gonna be really noisy. Your neighbors, sadly, might also hear it
-there, as 99MHz FM is is in the FM radio bands. MAKE SURE YOUR ANTENNA IS SMALL!!!
+3. Do not transmit more that 200 feet.
 
-There is also a MUCH STRONGER harmonic at ~155.726MHz FM, in the 2m amateur radio band. PLEASE, PLEASE, PLEASE don't use a large 
-enough antenna for it to be able to send that very far. And this signal will actually reach FURTHER than the AM one because it 
-is a shorter wavelength and therefore sends better using a short antenna. ***__If you want to use a longer antenna, PLEASE add the low pass filter I described, it fixes the noise enough for big antennas to be fine.__***
+4. Use the broadcast AM and FM bands (COMMON SENSE RULES!)
+
+Unlicensed operation on the AM (535 to 1705 kHz) and FM radio broadcast bands
+(88 to 108 MHz) is permitted for some extremely low powered devices covered
+under Part 15 of the FCC's rules.
+
+Unlicensed operation on the AM and FM radio broadcast bands is permitted for some extremely low
+powered devices covered under Part 15 of the FCC's rules. On FM frequencies, these devices are
+limited to an effective service range of approximately 200 feet (61 meters). See 47 CFR (Code of
+Federal Regulations) Section 15.239, and the July 24, 1991 Public Notice (still in effect). On the AM
+broadcast band, these devices are limited to an effective service range of approximately 200 feet (61
+meters). See 47 CFR Sections 15.207, 15.209, 15.219, and 15.221. These devices must accept any
+interference caused by any other operation, which may further limit the effective service range.
+
+## CHATHAM MARCONI MUSEUM STEM Class
+
+https://www.chathammarconi.org/
+
+picoAMSine is being taught in an after school STEM program at the Museum in
+Chatham Mass mid June 2024 by the Buzzards Bay Radio Club WB2TEV with
+instructor Bradshaw Lupton, with the gracious continued assistance of VU3CER
+Dhiru Kholia, KL7TF, Tom Farrington, N2EMU Mark Dionne, W1HD
+William Way, Eben Franks and Scott Haigh, David Weikel each of whom cheerfully
+tested WSPR and/or FT\* communication from the beginning of the COVID pandemic.
+The program will be detailed here for other STEM teachers, hams and STEM
+students on Cape Cod and throughout the State.
 
 ## How it works
 
-The Pi generates a 1557kHz PWM signal, which will be the carrier wave. The frequency is not changed, only the pulse width.
-(Sadly, I was not able to make an FM version because FM would require more precise frequency shifts, which the pico just can't do.)
-Then, an audio input is taken in on the right side of the breadboard (blue and green wire), which is clamped and slightly loaded 
-so that we don't get nasty interference.
-Then, this clean signal is given to the pico on pin 26. The pico does pulse width changes according to the signal, and outputs the 
-AM signal on pin 15.
+The Pi generates a 1557 kHz PWM signal, which will be the carrier wave. The
+frequency is not changed, only the pulse width. The pico does pulse width
+changes according to the `signal`, and outputs the AM signal on pin 15.
 
-## Circuit Diagram and explanation
+A sine wave signal is available on the `GP12` pin! This `GP12` pin can be
+connected to the ADC pin in order to send a RF sine signal out.
 
-![Image of circuit diagram](https://user-images.githubusercontent.com/48156391/235515258-df6d10fa-90f5-4997-813d-1cf969dbf8a0.png)
+Update: The Für Elise melody is available on the `GP13` pin now - enjoy
+responsibly! Connect `GP13` pin directly to the ADC pin using a jumper cable.
 
-The part which prepares the audio for the pico is not strictly needed, but if you use line inputs, you reeeally should have it.
-It has the following jobs:
-- D1 and D2 clamp the signal to acceptable voltages
-- **An extra resistor of about 50-400 ohms may be added from the AI+ point to the AI- point to load the signal.** This is optional, but
-  *can* clean up a little bit of noise if you have long cables.
+Update 2: Morse message tune is available on GP16 pin!
 
-**IMPORTANT :warning:**<br>
-If you aren't an asshole, ***PLEASE*** add the low pass filter as mentioned in the Disclaimer:
-- Add the 100ohm resistor (R3 in new schematic) between pico and antenna
-- Wire a 2nF (2000pF) capacitor (C1 in new schematic) between the new start of the antenna and ground
+## Reproducible compilation setup
+
+```
+export PATH=$PATH:$HOME/.local/bin
+sudo apt install make python3-pip -y
+
+make install_arduino_cli
+make install_platform
+make install_deps
+
+make default
+```
+
+Once these steps are executed, the resulting firmware can be found at the
+`build/rp2040.rp2040.rpipico/picoAMSine.ino.uf2` path.
 
 ## How to use it
 
-- Flash the ino file using the Arduino IDE
-- Cut open an audio cable and take one of the channels and the ground out of the cable's mantle
-- Connect those to jumper wires
-- Take a breadboard and put the pico on there, wire the circuit
-- Add the audio inputs
-- Add a **sufficiently long but not too long** antenna. Mine is about 2m-ish long.
-- Connect the Pi to your PC using the USB port for power
-- Connect the audio input to your PC
-- Tune in to 1557kHz AM
+- Flash the .ino file using the Arduino IDE
+- Tune in to 1557 kHz AM on the radio
 
-## PCBs
+## Voice transmission
 
-I am currently doing DIY small-scale production of PCBs for this project. Costs per 4 PCBs is around 3€ + labor, and I'm selling them for 
-1€ + shipping each (email me: pcb@mail.tudbut.de). The gerber and KiCad files will be uploaded here shortly as well if you want to make your own.
+Do you want to transmit an actual voice signal instead of the (possibly
+annoying) sine wave?
 
-![first prototype](https://github.com/TudbuT/picoAM/assets/48156391/777238d4-18bf-4856-8728-9882879e48a9)
-This is the first prototype. It was made using the Toner Transfer Method, but all future PCBs will be made using the professional dry film method,
-so they will look much better. TTM is much cheaper however, and I will make you a PCB with it for 80 cents + shipping.
+Just connect the `MAX4466 Electret Microphone Amplifier with Adjustable Gain
+Module` to the Pico, and there you go!
 
-Image of a PCB made using the photographic process (not yet populated):
-![second prototype](https://github.com/TudbuT/picoAM/assets/48156391/52075eeb-c9e0-4b73-842b-776b8e0631c0)
+## Custom tunes
 
-If you want a fully assembled one, add 9€ to the price (5€ for the pico, and the rest is mostly soldering labor and the cables)
+```
+pip3 install -r requirements.txt
+```
+
+From https://github.com/rgrosset/pico-pwm-audio?tab=readme-ov-file#usage-guide,
+
+Launch the notebook user interface by issuing the command below in the same
+folder as this project. This will open the Jupyter user interface. Open the
+notebook file in the user interface.
+
+```
+jupyter notebook
+```
+
+The notebook itself is fairly self explanatory. Run each cell in order using
+the run buttons in the UI. The final cell will create a data array that you can
+copy and paste into your project. The notebook is configured to convert just
+about any WAV file to a mono 11 kHz data which you can then use in your
+projects!
+
+## References
+
+- https://github.com/rgrosset/pico-pwm-audio
+
+- https://github.com/ktauchathuranga/MorseEncoder
